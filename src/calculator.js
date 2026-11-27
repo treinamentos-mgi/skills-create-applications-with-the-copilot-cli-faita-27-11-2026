@@ -7,6 +7,9 @@
  *   subtract  (subtração)     a - b
  *   multiply  (multiplicação) a * b
  *   divide    (divisão)       a / b  (divisão por zero gera erro)
+ *   modulo    (módulo)        a % b  (módulo por zero gera erro)
+ *   power     (potência)      a ** b
+ *   sqrt      (raiz quadrada) √a     (número negativo gera erro)
  *
  * Uso: node src/calculator.js <operação> <a> <b>
  * Ex.: node src/calculator.js add 2 3   # 5
@@ -35,19 +38,44 @@ function division(a, b) {
   return a / b;
 }
 
+// Módulo (lança erro se o divisor for zero)
+function modulo(a, b) {
+  if (b === 0) {
+    throw new Error('Módulo por zero não é permitido.');
+  }
+  return a % b;
+}
+
+// Potência
+function power(base, exponent) {
+  return base ** exponent;
+}
+
+// Raiz quadrada (lança erro para números negativos)
+function squareRoot(n) {
+  if (n < 0) {
+    throw new Error('Raiz quadrada de número negativo não é permitida.');
+  }
+  return Math.sqrt(n);
+}
+
 const operations = {
   add: addition,
   subtract: subtraction,
   multiply: multiplication,
   divide: division,
+  modulo,
+  power,
+  sqrt: squareRoot,
 };
 
 function main(args) {
   const [op, rawA, rawB] = args;
 
-  if (!op || rawA === undefined || rawB === undefined) {
+  const unary = op === 'sqrt';
+  if (!op || rawA === undefined || (!unary && rawB === undefined)) {
     throw new Error(
-      `Uso: node calculator.js <${Object.keys(operations).join('|')}> <a> <b>`
+      `Uso: node calculator.js <${Object.keys(operations).join('|')}> <a> [b]`
     );
   }
   if (!Object.hasOwn(operations, op)) {
@@ -57,12 +85,17 @@ function main(args) {
   }
 
   const a = Number(rawA);
-  const b = Number(rawB);
-  if (rawA.trim() === '' || rawB.trim() === '' || Number.isNaN(a) || Number.isNaN(b)) {
+  const b = unary ? 0 : Number(rawB);
+  if (
+    rawA.trim() === '' ||
+    (!unary && rawB.trim() === '') ||
+    Number.isNaN(a) ||
+    Number.isNaN(b)
+  ) {
     throw new Error('Os operandos devem ser números válidos.');
   }
 
-  return operations[op](a, b);
+  return unary ? operations[op](a) : operations[op](a, b);
 }
 
 if (require.main === module) {
@@ -83,4 +116,7 @@ module.exports = {
   subtract: subtraction,
   multiply: multiplication,
   divide: division,
+  modulo,
+  power,
+  squareRoot,
 };
